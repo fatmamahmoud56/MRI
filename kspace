@@ -4,7 +4,7 @@ from PyQt5 import QtWidgets, QtCore,QtGui
 from PyQt5.QtGui import QPainter, QColor, QPen
 from PyQt5.QtCore import Qt
 
-from PyQt5.QtWidgets import QFileDialog,QApplication,QProgressBar,QPushButton,QSpinBox
+from PyQt5.QtWidgets import QFileDialog,QApplication,QProgressBar,QPushButton,QSpinBox,QComboBox
 from PyQt5.QtGui import QPixmap,QImage
 from phantom import Ui_MainWindow
 import sys
@@ -19,7 +19,7 @@ import math
 import matplotlib
 import pyqtgraph as pg
 import pyqtgraph.exporters
-import time
+ 
 import cmath
 from PyQt5.QtGui import QPixmap,QPainter,QPen
 from qimage2ndarray import gray2qimage , array2qimage
@@ -27,7 +27,11 @@ from PIL import Image, ImageEnhance
 from tkinter import Tk, Label
 from PIL import Image, ImageTk
 
-app=QApplication(sys.argv)
+#YYYYY
+RTTYYYYY
+TTYYUUUTT=YYTRDD
+
+#app=QApplication(sys.argv)
    
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -35,8 +39,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         super(ApplicationWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.pushButton.clicked.connect(self.button_clicked)
-        
+        #self.ui.pushButton.clicked.connect(self.button_clicked)
+        self.ui.pushButton_2.clicked.connect(self.KSPACE)
+        self.templatetype =QComboBox(self)
+        self.templatetype.addItem("phantom1")
+        self.templatetype.addItem("phantom2")
+        self.templatetype.activated[str].connect(self.button_clicked)
+        self.templatetype.setGeometry(130,50, 150, 30)
+        self.text = ""
+
         self.p=""
         self.cm=""
         self.cn=""
@@ -52,9 +63,34 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.label.mouseDoubleClickEvent=self.getPixel
         self.ui.label.mouseHold=self.getPixel
         self.click=1
+        self.ui.horizontalSlider.valueChanged.connect(self.valuechangeb)
+        self.ui.horizontalSlider_2.valueChanged.connect(self.valuechangec)
          
  
-     
+    def valuechangeb(self):
+            #global img
+            result1 = gray2qimage(self.T1)
+            self.ui.label_4.setPixmap(QPixmap.fromImage(result1))
+            result1.save("result1.png")
+            img = Image.open("result1.png")
+            factor = self.ui.horizontalSlider.value()
+            brightness = ImageEnhance.Brightness(img).enhance(factor/8)
+            brightness.save("out.png")
+            self.ui.label_4.setPixmap(QPixmap("out.png"))  
+            
+    def valuechangec(self):
+            #global img2, tissue
+            #result2 = gray2qimage(self.t1)
+            #result2.save("result2.png")
+            factor= self.ui.horizontalSlider_2.value()
+            factor=factor/5
+            image=Image.open("T1.png")
+            enhance_object= ImageEnhance.Contrast(image)
+            out=enhance_object.enhance(factor)
+            im=ImageQt(out)
+            self.ui.label_4.setPixmap(QPixmap.fromImage(im))
+    
+    
     def  getPixel   (self,event):
           
         if(self.click<=5):
@@ -102,9 +138,58 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         QApplication.processEvents()
         
     def button_clicked(self): 
-         #        self.N=int(input("size"))
-        self.N=self.ui.spinBox_2.value()
-        def phantom (n = self.N, p_type = 'Modified Shepp-Logan', ellipses = None):
+         self.text = self.templatetype.currentText() 
+         if (self.text =="phantom1"): 
+             self.N=self.ui.spinBox_2.value()
+             fileName, _filter = QFileDialog.getOpenFileName(self, "Title", "Default File", "Filter -- All Files (*);;Python Files (*.py)")
+             pixmap = QPixmap(fileName)
+             pixmap=pixmap.scaled(int(pixmap.height()),int(pixmap.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+             self.ui.label.setPixmap(pixmap )
+             self.ui.label_6.setPixmap(pixmap )
+             
+             img = cv2.imread(fileName,cv2.IMREAD_GRAYSCALE) 
+              
+             
+             #x=cv2.imread('img256.png',0)
+             #x=cv2.resize(fscale,(self.N,self.N),interpolation=cv2.INTER_AREA)
+       
+             fscale = np.asarray( img)
+             self.T1=np.array(fscale)
+             self.T2=np.array(fscale)
+             for self.i in range (0,self.N):
+                 for self.j in range (0,self.N):
+                     self.T1[self.i][self.j]=(self.T1[self.i][self.j]+1000)/2
+                     self.T2[self.i][self.j]=(self.T2[self.i][self.j]+400)/5
+                  
+
+             t1_new=np.asarray(self.T1,dtype=np.uint8)
+             t1_img=Image.fromarray(t1_new)
+             t1_img.save('T1.png')
+             magnitude_spectrum1 = 20*np.log(np.abs(self.T1))
+             fscale1 = np.asarray( magnitude_spectrum1,dtype=np.uint8)
+             fftimage1=Image.fromarray( fscale1)
+             result1=ImageQt( fftimage1)
+             pix1=QPixmap.fromImage( result1)
+             self.ui.label_4.setPixmap( pix1 )
+             self.ui.label_4.show()
+            
+             t2_new=np.asarray(self.T2,dtype=np.uint8)
+             t2_img=Image.fromarray(t2_new)
+             t2_img.save('T1.png')
+             magnitude_spectrum2 = 20*np.log(np.abs(self.T2))
+             fscale2 = np.asarray( magnitude_spectrum2,dtype=np.uint8)
+             fftimage2=Image.fromarray( fscale2)
+             result2=ImageQt( fftimage2)
+             pix2=QPixmap.fromImage( result2)
+             self.ui.label_5.setPixmap( pix2 )
+             self.ui.label_5.show()
+        
+              
+
+             
+         else:#        self.N=int(input("size"))
+             self.N=self.ui.spinBox_2.value()
+             def phantom (n = self.N, p_type = 'Modified Shepp-Logan', ellipses = None):
 	                   
                         	if (ellipses is None):
                         		ellipses = _select_phantom (p_type)
@@ -142,21 +227,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         	return p
                         
                         
-        def _select_phantom (name):
-            if (name.lower()=='shepp-logan'):
-                e = _shepp_logan()
-            elif (name.lower()=='modified shepp-logan'):
-                e = _mod_shepp_logan()
-            else:
-                raise ValueError ("UnKnown phantom type:%s" %name)
-            return e    
+             def _select_phantom (name):
+                 if (name.lower()=='shepp-logan'):
+                     e = _shepp_logan()
+                 elif (name.lower()=='modified shepp-logan'):
+                     e = _mod_shepp_logan()
+                 else:
+                     raise ValueError ("UnKnown phantom type:%s" %name)
+                 return e    
             
             
 	       
 	
-        def _shepp_logan ():
+             def _shepp_logan ():
 	#  Standard head phantom, taken from Shepp & Logan
-	           return [[   2,   .69,   .92,    0,      0,   0],
+     	           return [[   2,   .69,   .92,    0,      0,   0],
 	                   [-.98, .6624, .8740,    0, -.0184,   0],
 	                   [-.02, .1100, .3100,  .22,      0, -18],
 	                   [-.02, .1600, .4100, -.22,      0,  18],
@@ -167,11 +252,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 	                   [ .01, .0230, .0230,    0,  -.606,   0],
 	                   [ .01, .0230, .0460,  .06,  -.605,   0]]
                
-        def _mod_shepp_logan ():
+             def _mod_shepp_logan ():
 #	#  Modified version of Shepp & Logan's head phantom, 
 #	#  adjusted to improve contrast.  Taken from Toft.
 #	 
-           return     [[   1,   .69,   .92,    0,      0,   0],
+                 return     [[   1,   .69,   .92,    0,      0,   0],
 	                   [-.80, .6624, .8740,    0, -.0184,   0],
 	                   [-.20, .1100, .3100,  .22,      0, -18],
 	                   [-.20, .1600, .4100, -.22,      0,  18],
@@ -183,114 +268,534 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 	                   [ .10, .0230, .0460,  .06,  -.605,   0]]
               
               
-        self.P=phantom()
-        magnitude_spectrum = 20*np.log(np.abs(self.P))
-        fscale = np.asarray( magnitude_spectrum,dtype=np.uint8)
-        self.fftimage=Image.fromarray( fscale)
-        self.result=ImageQt(self.fftimage)
-        self.pix=QPixmap.fromImage(self.result)
-        self.ui.label.setPixmap(self.pix )
-        self.ui.label.show()
-        self.ui.label_6.setPixmap(self.pix )
-        self.ui.label_6.show()
-        self.result.save('T11.png')
-        x=cv2.imread('T11.png',0)
-        x=cv2.resize(x,(self.N,self.N),interpolation=cv2.INTER_AREA)
+             self.P=phantom()
+             magnitude_spectrum = 20*np.log(np.abs(self.P))
+             fscale = np.asarray( magnitude_spectrum,dtype=np.uint8)
+             self.fftimage=Image.fromarray( fscale)
+             self.result=ImageQt(self.fftimage)
+             self.pix=QPixmap.fromImage(self.result)
+             self.ui.label.setPixmap(self.pix )
+             self.ui.label.show()
+             self.ui.label_6.setPixmap(self.pix )
+             self.ui.label_6.show()
+             self.result.save('T11.png')
+             x=cv2.imread('T11.png',0)
+             x=cv2.resize(x,(self.N,self.N),interpolation=cv2.INTER_AREA)
        
          
-        self.T1=np.array(x)
-        self.T2=np.array(x)
-        for self.i in range (0,self.N):
-            for self.j in range (0,self.N):
-                 self.T1[self.i][self.j]=(self.T1[self.i][self.j]+1000)/2
-                 self.T2[self.i][self.j]=(self.T2[self.i][self.j]+400)/5
+             self.T1=np.array(x)
+             self.T2=np.array(x)
+             for self.i in range (0,self.N):
+                 for self.j in range (0,self.N):
+                     self.T1[self.i][self.j]=(self.T1[self.i][self.j]+1000)/2
+                     self.T2[self.i][self.j]=(self.T2[self.i][self.j]+400)/5
                   
 
-        t1_new=np.asarray(self.T1,dtype=np.uint8)
-        t1_img=Image.fromarray(t1_new)
-        t1_img.save('T1.png')
-        magnitude_spectrum1 = 20*np.log(np.abs(self.T1))
-        fscale1 = np.asarray( magnitude_spectrum1,dtype=np.uint8)
-        fftimage1=Image.fromarray( fscale1)
-        result1=ImageQt( fftimage1)
-        pix1=QPixmap.fromImage( result1)
-        self.ui.label_4.setPixmap( pix1 )
-        self.ui.label_4.show()
+             t1_new=np.asarray(self.T1,dtype=np.uint8)
+             t1_img=Image.fromarray(t1_new)
+             t1_img.save('T1.png')
+             magnitude_spectrum1 = 20*np.log(np.abs(self.T1))
+             fscale1 = np.asarray( magnitude_spectrum1,dtype=np.uint8)
+             fftimage1=Image.fromarray( fscale1)
+             result1=ImageQt( fftimage1)
+             pix1=QPixmap.fromImage( result1)
+             self.ui.label_4.setPixmap( pix1 )
+             self.ui.label_4.show()
             
-        t2_new=np.asarray(self.T2,dtype=np.uint8)
-        t2_img=Image.fromarray(t2_new)
-        t2_img.save('T1.png')
-        magnitude_spectrum2 = 20*np.log(np.abs(self.T2))
-        fscale2 = np.asarray( magnitude_spectrum2,dtype=np.uint8)
-        fftimage2=Image.fromarray( fscale2)
-        result2=ImageQt( fftimage2)
-        pix2=QPixmap.fromImage( result2)
-        self.ui.label_5.setPixmap( pix2 )
-        self.ui.label_5.show()
+             t2_new=np.asarray(self.T2,dtype=np.uint8)
+             t2_img=Image.fromarray(t2_new)
+             t2_img.save('T1.png')
+             magnitude_spectrum2 = 20*np.log(np.abs(self.T2))
+             fscale2 = np.asarray( magnitude_spectrum2,dtype=np.uint8)
+             fftimage2=Image.fromarray( fscale2)
+             result2=ImageQt( fftimage2)
+             pix2=QPixmap.fromImage( result2)
+             self.ui.label_5.setPixmap( pix2 )
+             self.ui.label_5.show()
         
-        FA=self.ui.spinBox_4.value()
-        TE=self.ui.spinBox.value()
-        TR=self.ui.spinBox_3.value()
-        #FA=int(input("angle"))
-
-        K_space=np.zeros((self.P.shape[0],self.P.shape[1]) ,dtype=complex)
-        res1=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
-        res2=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
-        intial_mat= np.array([[[0 for k in range (3)] for j in range (self.N)] for i in range (self.N)]) #np.zeros((self.N,self.N,3))
-        recovery=np.array([[0],[0],[1-math.exp(-1000/self.T1[self.i][self.j])]])
- 
-        for self.i in range (0,self.N):
-            for self.j in range (0,self.N):
-                intial_mat[self.i][self.j][2]=1
-                #print(intial_mat)
-        FA1=math.radians(FA) #Convert angle FA from degrees to radians   
-        R=np.array([[1,0,0],[0,np.cos(FA1),(np.sin(FA1))*-1],[0,np.sin(FA1),np.cos(FA1)]]) # rotation matrrix 
-        for K_space_row in range (K_space.shape[0]):
+        
+    def KSPACE (self):
+            FA=self.ui.spinBox_4.value()
+            TE=self.ui.spinBox.value()
+            TR=self.ui.spinBox_3.value()
+            #FA=int(input("angle"))
+            
+            K_space=np.zeros((self.P.shape[0],self.P.shape[1]) ,dtype=complex)
+            res1=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
+            res2=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
+            intial_mat= np.zeros((self.N,self.N,3))#np.array([[[0 for k in range (3)] for j in range (self.N)] for i in range (self.N)]) #np.zeros((self.N,self.N,3))
+            recovery=np.array([[0],[0],[1-math.exp(-1000/self.T1[self.i][self.j])]])
+            
             for self.i in range (0,self.N):
                 for self.j in range (0,self.N):
-    
-                    intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])  #multiply rotation mattrix with Mo
-                    #qq=np.reshape(res1, (3,int(self.N)*int(self.N)))
-                    Decay=np.exp(-TE/self.T2[self.i,self.j])#np.array([[np.exp(-TE/self.T2[self.i][self.j]) ,0 ,0] , [0 ,np.exp(-TE/self.T2[self.i][self.j]) , 0 ] , [0 , 0  , np.exp(-TE/self.T2[self.i][self.j])]])
-
-                    intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
-                    #print(res2)
-                    #intial_mat[self.i][self.j]=np.reshape(qq, (self.N,self.N,3))
-                    #print(res2)
-##            
-            for K_space_col in range (K_space.shape[1]):
-                Gxstep=((2*math.pi)/self.N)*K_space_row
-                Gystep=((2*math.pi)/self.N)*K_space_col
-                        #print(Gxstep)
-                        #print(Gystep)
-                for t in range (self.N):
-                    for y in range (self.N):
-                        total_theta = (Gxstep*t) +(Gystep*y)
-                        #print(total_theta)
-                        x_y=math.sqrt( res2[t,y,0]**2 + res2[t,y,1]**2)
-                        K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
-            for q in range (self.N):
-                for w in range (self.N):                                
-                     intial_mat[q,w,0]=0
-                     intial_mat[q,w,1]=0
-                     intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w])) 
-                           
+                    intial_mat[self.i,self.j,2]=1
+                    #print(intial_mat)
+                    FA1=math.radians(FA) #Convert angle FA from degrees to radians   
+                    R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+            for K_space_row in range (K_space.shape[0]):
+                for self.i in range (self.N):
+                    for self.j in range (self.N):
+                        Decay=np.exp(-TE/self.T2[self.i,self.j])#np.array([[np.exp(-TE/self.T2[self.i][self.j]) ,0 ,0] , [0 ,np.exp(-TE/self.T2[self.i][self.j]) , 0 ] , [0 , 0  , np.exp(-TE/self.T2[self.i][self.j])]])
+                        print(Decay)       
+                        intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])  #multiply rotation mattrix with Mo
+                                #qq=np.reshape(res1, (3,int(self.N)*int(self.N)))
+                                
+                        intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                                #print(intial_mat)
+                                #print(res2)
+                                #intial_mat[self.i][self.j]=np.reshape(qq, (self.N,self.N,3))
+                                #print(res2)
+##                
+                for K_space_col in range (K_space.shape[1]):
+                    Gxstep=((2*np.pi)/self.N)*K_space_row
+                    Gystep=((2*np.pi)/self.N)*K_space_col
+                    # print(Gxstep)
+                    #print(Gystep)
+                    for t in range (self.N):
+                        for y in range (self.N):
+                            total_theta = (Gxstep*t) +(Gystep*y)
+                            #print(total_theta)
+                            x_y=math.sqrt( intial_mat[t,y,0]**2 + intial_mat[t,y,1]**2)
+                                #print(x_y)
+                            K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                            #print("K_space",K_space)        
+#               for q in range (self.N):
+#                   for w in range (self.N):                                
+#                       intial_mat[q,w,0]=0
+#                               intial_mat[q,w,1]=0
+#                       intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w])) 
+                                   
                               
-        kspace_img=gray2qimage(np.abs(K_space*255))
-        img=QPixmap( kspace_img)
-        img=img.scaled(int(img.height()),int(img.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
-        f =np.fft.ifft2(K_space*255)
-        tt=np.abs(f)
-        rr=gray2qimage(tt)
-        img1=QPixmap( rr)
-        img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
-        #tt=np.abs(f)
-        #magnitude_spectrum3= 20*np.log(np.abs(f))
-        
-        
+            kspace_img=gray2qimage(np.abs(K_space*255))
+            img=QPixmap( kspace_img)
+            img=img.scaled(int(img.height()),int(img.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+            f =np.fft.ifft2(K_space).real
+            maxp= np.max(f)
+            minp = np.min(f)
+            f=(255/(maxp-minp)*(f-minp))
+            #print("invers",f)
+            tt=np.abs(f)
+            rr=gray2qimage(tt)
+            img1=QPixmap( rr)
+            img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+            #tt=np.abs(f)
+            #magnitude_spectrum3= 20*np.log(np.abs(f))
+                
+            
        # pix3=ImageTk.PhotoImage(image.resize((pixels_x, pixels_y))) 
-        self.ui.label_7.setPixmap( img1 )
-        self.ui.label_7.show()
+            self.ui.label_7.setPixmap( img1 )
+            self.ui.label_7.show()
+         
+#         
+#        magnitude_spectrum3 = 20*np.log(np.abs(f))
+#        fscale3 = np.asarray( magnitude_spectrum3,dtype=np.uint8)
+#        fftimage3=Image.fromarray( fscale3)
+#        result3=ImageQt( fftimage3)
+#        pix3=QPixmap.fromImage( result3)
+#        self.ui.label_7.setPixmap( pix3 )
+#        self.ui.label_7.show()
+        
+                        
+ 
+                                
+        
+        
+        
+        
+        
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    application = ApplicationWindow()
+    application.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
+from matplotlib import pyplot as plt
+from scipy.ndimage.interpolation import zoom
+from PyQt5 import QtWidgets, QtCore,QtGui
+from PyQt5.QtGui import QPainter, QColor, QPen
+from PyQt5.QtCore import Qt
+
+from PyQt5.QtWidgets import QFileDialog,QApplication,QProgressBar,QPushButton,QSpinBox,QComboBox
+from PyQt5.QtGui import QPixmap,QImage
+from phantom import Ui_MainWindow
+import sys
+from PIL import Image
+from PIL.ImageQt import ImageQt
+import time
+import numpy as np
+from numpy import loadtxt
+import cv2
+import random
+import math 
+import matplotlib
+import pyqtgraph as pg
+import pyqtgraph.exporters
+ 
+import cmath
+from PyQt5.QtGui import QPixmap,QPainter,QPen
+from qimage2ndarray import gray2qimage , array2qimage
+from PIL import Image, ImageEnhance
+from tkinter import Tk, Label
+from PIL import Image, ImageTk
+
+
+#app=QApplication(sys.argv)
+   
+
+class ApplicationWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(ApplicationWindow, self).__init__()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        #self.ui.pushButton.clicked.connect(self.button_clicked)
+        self.ui.pushButton_2.clicked.connect(self.KSPACE)
+        self.templatetype =QComboBox(self)
+        self.templatetype.addItem("phantom1")
+        self.templatetype.addItem("phantom2")
+        self.templatetype.activated[str].connect(self.button_clicked)
+        self.templatetype.setGeometry(130,50, 150, 30)
+        self.text = ""
+
+        self.p=""
+        self.cm=""
+        self.cn=""
+        self.pix=""
+        self.fftimage=""
+        self.result=""
+        self.T1=""
+        self.T2=""
+        self.N=""
+        self.i=""
+        self.j=""
+        self.ui.label.mousePressEvennt=self.getPixel
+        self.ui.label.mouseDoubleClickEvent=self.getPixel
+        self.ui.label.mouseHold=self.getPixel
+        self.click=1
+        self.ui.horizontalSlider.valueChanged.connect(self.valuechangeb)
+        self.ui.horizontalSlider_2.valueChanged.connect(self.valuechangec)
+         
+ 
+    def valuechangeb(self):
+            #global img
+            result1 = gray2qimage(self.T1)
+            self.ui.label_4.setPixmap(QPixmap.fromImage(result1))
+            result1.save("result1.png")
+            img = Image.open("result1.png")
+            factor = self.ui.horizontalSlider.value()
+            brightness = ImageEnhance.Brightness(img).enhance(factor/8)
+            brightness.save("out.png")
+            self.ui.label_4.setPixmap(QPixmap("out.png"))  
+            
+    def valuechangec(self):
+            #global img2, tissue
+            #result2 = gray2qimage(self.t1)
+            #result2.save("result2.png")
+            factor= self.ui.horizontalSlider_2.value()
+            factor=factor/5
+            image=Image.open("T1.png")
+            enhance_object= ImageEnhance.Contrast(image)
+            out=enhance_object.enhance(factor)
+            im=ImageQt(out)
+            self.ui.label_4.setPixmap(QPixmap.fromImage(im))
+    
+    
+    def  getPixel   (self,event):
+          
+        if(self.click<=5):
+            self.x=math.floor((event.pos().x()*self.N)/self.ui.label.frameGeometry().width())
+            self.y=math.floor((event.pos().y()*self.N)/self.ui.label.frameGeometry().height())
+            self.frame()
+            t1_value = self.T1[self.x,self.y]
+            t2_value = self.T2[self.x,self.y]
+#        
+             
+            arr1=[]
+            arr2=[]
+            for t  in range (100):
+                Mz=(1-np.exp(-t/t1_value))
+                Mxy=np.exp(-t/t2_value)
+                arr1.append(Mz)
+                arr2.append(Mxy)  
+            p1=pg.plot(arr1,title='t1',pen='r')  
+            p2=pg.plot(arr2,title='t2',pen='r')  
+            self.click=self.click+1
+        
+        
+    def frame(self):
+        QApplication.processEvents()
+        painter= QtGui.QPainter(self.pix)
+        painter.begin(self)
+        if (self.click==1):
+           self.penRect= QtGui.QPen(QtCore.Qt.red)
+        elif (self.click==2):
+           self.penRect= QtGui.QPen(QtCore.Qt.green)
+        elif (self.click==3):
+           self.penRect= QtGui.QPen(QtCore.Qt.blue)
+        elif (self.click==4):
+           self.penRect= QtGui.QPen(QtCore.Qt.yellow)
+        elif (self.click==5):
+           self.penRect= QtGui.QPen(QtCore.Qt.magenta)
+        else:
+            print("end")
+        self.penRect.setWidth(1)
+        painter.setPen(self.penRect)
+        painter.drawRect(self.x,self.y,5, 5)
+        painter.end()
+        result=self.pix.scaled(int(self.pix.height()),int(self.pix.width()))
+        self.ui.label.setPixmap(result)
+        QApplication.processEvents()
+        
+    def button_clicked(self): 
+         self.text = self.templatetype.currentText() 
+         if (self.text =="phantom1"): 
+             self.N=self.ui.spinBox_2.value()
+             fileName, _filter = QFileDialog.getOpenFileName(self, "Title", "Default File", "Filter -- All Files (*);;Python Files (*.py)")
+             pixmap = QPixmap(fileName)
+             pixmap=pixmap.scaled(int(pixmap.height()),int(pixmap.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+             self.ui.label.setPixmap(pixmap )
+             self.ui.label_6.setPixmap(pixmap )
+             
+             img = cv2.imread(fileName,cv2.IMREAD_GRAYSCALE) 
+              
+             
+             #x=cv2.imread('img256.png',0)
+             #x=cv2.resize(fscale,(self.N,self.N),interpolation=cv2.INTER_AREA)
+       
+             fscale = np.asarray( img)
+             self.T1=np.array(fscale)
+             self.T2=np.array(fscale)
+             for self.i in range (0,self.N):
+                 for self.j in range (0,self.N):
+                     self.T1[self.i][self.j]=(self.T1[self.i][self.j]+1000)/2
+                     self.T2[self.i][self.j]=(self.T2[self.i][self.j]+400)/5
+                  
+
+             t1_new=np.asarray(self.T1,dtype=np.uint8)
+             t1_img=Image.fromarray(t1_new)
+             t1_img.save('T1.png')
+             magnitude_spectrum1 = 20*np.log(np.abs(self.T1))
+             fscale1 = np.asarray( magnitude_spectrum1,dtype=np.uint8)
+             fftimage1=Image.fromarray( fscale1)
+             result1=ImageQt( fftimage1)
+             pix1=QPixmap.fromImage( result1)
+             self.ui.label_4.setPixmap( pix1 )
+             self.ui.label_4.show()
+            
+             t2_new=np.asarray(self.T2,dtype=np.uint8)
+             t2_img=Image.fromarray(t2_new)
+             t2_img.save('T1.png')
+             magnitude_spectrum2 = 20*np.log(np.abs(self.T2))
+             fscale2 = np.asarray( magnitude_spectrum2,dtype=np.uint8)
+             fftimage2=Image.fromarray( fscale2)
+             result2=ImageQt( fftimage2)
+             pix2=QPixmap.fromImage( result2)
+             self.ui.label_5.setPixmap( pix2 )
+             self.ui.label_5.show()
+        
+              
+
+             
+         else:#        self.N=int(input("size"))
+             self.N=self.ui.spinBox_2.value()
+             def phantom (n = self.N, p_type = 'Modified Shepp-Logan', ellipses = None):
+	                   
+                        	if (ellipses is None):
+                        		ellipses = _select_phantom (p_type)
+                        	elif (np.size (ellipses, 1) != 6):
+                        		raise AssertionError ("Wrong number of columns in user phantom")
+                        	
+                        	# Blank image
+                        	p = np.zeros ((n, n))
+                        
+                        	# Create the pixel grid
+                        	ygrid, xgrid = np.mgrid[-1:1:(1j*n), -1:1:(1j*n)]
+                        
+                        	for ellip in ellipses:
+                        		I   = ellip [0]
+                        		a2  = ellip [1]**2
+                        		b2  = ellip [2]**2
+                        		x0  = ellip [3]
+                        		y0  = ellip [4]
+                        		phi = ellip [5] * np.pi / 180  # Rotation angle in radians
+                        		
+                        		# Create the offset x and y values for the grid
+                        		x = xgrid - x0
+                        		y = ygrid - y0
+                        		
+                        		cos_p = np.cos (phi) 
+                        		sin_p = np.sin (phi)
+                        		
+                        		# Find the pixels within the ellipse
+                        		locs = (((x * cos_p + y * sin_p)**2) / a2 
+                                      + ((y * cos_p - x * sin_p)**2) / b2) <= 1
+                        		
+                        		# Add the ellipse intensity to those pixels
+                        		p [locs] += I
+                        
+                        	return p
+                        
+                        
+             def _select_phantom (name):
+                 if (name.lower()=='shepp-logan'):
+                     e = _shepp_logan()
+                 elif (name.lower()=='modified shepp-logan'):
+                     e = _mod_shepp_logan()
+                 else:
+                     raise ValueError ("UnKnown phantom type:%s" %name)
+                 return e    
+            
+            
+	       
+	
+             def _shepp_logan ():
+	#  Standard head phantom, taken from Shepp & Logan
+     	           return [[   2,   .69,   .92,    0,      0,   0],
+	                   [-.98, .6624, .8740,    0, -.0184,   0],
+	                   [-.02, .1100, .3100,  .22,      0, -18],
+	                   [-.02, .1600, .4100, -.22,      0,  18],
+	                   [ .01, .2100, .2500,    0,    .35,   0],
+	                   [ .01, .0460, .0460,    0,     .1,   0],
+	                   [ .02, .0460, .0460,    0,    -.1,   0],
+	                   [ .01, .0460, .0230, -.08,  -.605,   0],
+	                   [ .01, .0230, .0230,    0,  -.606,   0],
+	                   [ .01, .0230, .0460,  .06,  -.605,   0]]
+               
+             def _mod_shepp_logan ():
+#	#  Modified version of Shepp & Logan's head phantom, 
+#	#  adjusted to improve contrast.  Taken from Toft.
+#	 
+                 return     [[   1,   .69,   .92,    0,      0,   0],
+	                   [-.80, .6624, .8740,    0, -.0184,   0],
+	                   [-.20, .1100, .3100,  .22,      0, -18],
+	                   [-.20, .1600, .4100, -.22,      0,  18],
+	                   [ .10, .2100, .2500,    0,    .35,   0],
+	                   [ .10, .0460, .0460,    0,     .1,   0],
+	                   [ .10, .0460, .0460,    0,    -.1,   0],
+	                   [ .10, .0460, .0230, -.08,  -.605,   0],
+	                   [ .10, .0230, .0230,    0,  -.606,   0],
+	                   [ .10, .0230, .0460,  .06,  -.605,   0]]
+              
+              
+             self.P=phantom()
+             magnitude_spectrum = 20*np.log(np.abs(self.P))
+             fscale = np.asarray( magnitude_spectrum,dtype=np.uint8)
+             self.fftimage=Image.fromarray( fscale)
+             self.result=ImageQt(self.fftimage)
+             self.pix=QPixmap.fromImage(self.result)
+             self.ui.label.setPixmap(self.pix )
+             self.ui.label.show()
+             self.ui.label_6.setPixmap(self.pix )
+             self.ui.label_6.show()
+             self.result.save('T11.png')
+             x=cv2.imread('T11.png',0)
+             x=cv2.resize(x,(self.N,self.N),interpolation=cv2.INTER_AREA)
+       
+         
+             self.T1=np.array(x)
+             self.T2=np.array(x)
+             for self.i in range (0,self.N):
+                 for self.j in range (0,self.N):
+                     self.T1[self.i][self.j]=(self.T1[self.i][self.j]+1000)/2
+                     self.T2[self.i][self.j]=(self.T2[self.i][self.j]+400)/5
+                  
+
+             t1_new=np.asarray(self.T1,dtype=np.uint8)
+             t1_img=Image.fromarray(t1_new)
+             t1_img.save('T1.png')
+             magnitude_spectrum1 = 20*np.log(np.abs(self.T1))
+             fscale1 = np.asarray( magnitude_spectrum1,dtype=np.uint8)
+             fftimage1=Image.fromarray( fscale1)
+             result1=ImageQt( fftimage1)
+             pix1=QPixmap.fromImage( result1)
+             self.ui.label_4.setPixmap( pix1 )
+             self.ui.label_4.show()
+            
+             t2_new=np.asarray(self.T2,dtype=np.uint8)
+             t2_img=Image.fromarray(t2_new)
+             t2_img.save('T1.png')
+             magnitude_spectrum2 = 20*np.log(np.abs(self.T2))
+             fscale2 = np.asarray( magnitude_spectrum2,dtype=np.uint8)
+             fftimage2=Image.fromarray( fscale2)
+             result2=ImageQt( fftimage2)
+             pix2=QPixmap.fromImage( result2)
+             self.ui.label_5.setPixmap( pix2 )
+             self.ui.label_5.show()
+        
+        
+    def KSPACE (self):
+            FA=self.ui.spinBox_4.value()
+            TE=self.ui.spinBox.value()
+            TR=self.ui.spinBox_3.value()
+            #FA=int(input("angle"))
+            
+            K_space=np.zeros((self.P.shape[0],self.P.shape[1]) ,dtype=complex)
+            res1=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
+            res2=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
+            intial_mat= np.zeros((self.N,self.N,3))#np.array([[[0 for k in range (3)] for j in range (self.N)] for i in range (self.N)]) #np.zeros((self.N,self.N,3))
+            recovery=np.array([[0],[0],[1-math.exp(-1000/self.T1[self.i][self.j])]])
+            
+            for self.i in range (0,self.N):
+                for self.j in range (0,self.N):
+                    intial_mat[self.i,self.j,2]=1
+                    #print(intial_mat)
+                    FA1=math.radians(FA) #Convert angle FA from degrees to radians   
+                    R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+            for K_space_row in range (K_space.shape[0]):
+                for self.i in range (self.N):
+                    for self.j in range (self.N):
+                        Decay=np.exp(-TE/self.T2[self.i,self.j])#np.array([[np.exp(-TE/self.T2[self.i][self.j]) ,0 ,0] , [0 ,np.exp(-TE/self.T2[self.i][self.j]) , 0 ] , [0 , 0  , np.exp(-TE/self.T2[self.i][self.j])]])
+                        print(Decay)       
+                        intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])  #multiply rotation mattrix with Mo
+                                #qq=np.reshape(res1, (3,int(self.N)*int(self.N)))
+                                
+                        intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                                #print(intial_mat)
+                                #print(res2)
+                                #intial_mat[self.i][self.j]=np.reshape(qq, (self.N,self.N,3))
+                                #print(res2)
+##                
+                for K_space_col in range (K_space.shape[1]):
+                    Gxstep=((2*np.pi)/self.N)*K_space_row
+                    Gystep=((2*np.pi)/self.N)*K_space_col
+                    # print(Gxstep)
+                    #print(Gystep)
+                    for t in range (self.N):
+                        for y in range (self.N):
+                            total_theta = (Gxstep*t) +(Gystep*y)
+                            #print(total_theta)
+                            x_y=math.sqrt( intial_mat[t,y,0]**2 + intial_mat[t,y,1]**2)
+                                #print(x_y)
+                            K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                            #print("K_space",K_space)        
+#               for q in range (self.N):
+#                   for w in range (self.N):                                
+#                       intial_mat[q,w,0]=0
+#                               intial_mat[q,w,1]=0
+#                       intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w])) 
+                                   
+                              
+            kspace_img=gray2qimage(np.abs(K_space*255))
+            img=QPixmap( kspace_img)
+            img=img.scaled(int(img.height()),int(img.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+            f =np.fft.ifft2(K_space).real
+            maxp= np.max(f)
+            minp = np.min(f)
+            f=(255/(maxp-minp)*(f-minp))
+            #print("invers",f)
+            tt=np.abs(f)
+            rr=gray2qimage(tt)
+            img1=QPixmap( rr)
+            img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+            #tt=np.abs(f)
+            #magnitude_spectrum3= 20*np.log(np.abs(f))
+                
+            
+       # pix3=ImageTk.PhotoImage(image.resize((pixels_x, pixels_y))) 
+            self.ui.label_7.setPixmap( img1 )
+            self.ui.label_7.show()
          
 #         
 #        magnitude_spectrum3 = 20*np.log(np.abs(f))
