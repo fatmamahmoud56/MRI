@@ -1,7 +1,7 @@
- import pyqtgraph as pg
+import pyqtgraph as pg
 import pyqtgraph.exporters
 import matplotlib.pyplot as plt 
- 
+from tkinter import *
 from matplotlib import pyplot as plt
 from scipy.ndimage.interpolation import zoom
 from PyQt5 import QtWidgets, QtCore,QtGui
@@ -41,12 +41,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         #self.ui.pushButton.clicked.connect(self.button_clicked)
-        self.ui.pushButton_2.clicked.connect(self.KSPACE)
-        self.templatetype =QComboBox(self)
-        self.templatetype.addItem("phantom1")
-        self.templatetype.addItem("phantom2")
-        self.templatetype.activated[str].connect(self.button_clicked)
-        self.templatetype.setGeometry(130,50, 150, 30)
+        #self.ui.pushButton_2.clicked.connect(self.KSPACE)
+        self.ui.pushButton_2.clicked.connect(self.Ernst_Angle) 
+        self.ui.pushButton.clicked.connect(self.Acquisition) 
+        self.ui.pushButton.clicked.connect(self.Acquisition) 
+        self.ui.comboBox.currentIndexChanged.connect(self.button_clicked)
+#        self.ui.comboBox_2.currentIndexChanged.connect(self.Acquisition)
+#        self.ui.comboBox_3.currentIndexChanged.connect(self.Acquisition)
+        self.ui.comboBox_4.currentIndexChanged.connect(self.Artifacts)
+        self.ui.comboBox_5.currentIndexChanged.connect(self. seq)
         self.text = ""
 
         self.p=""
@@ -63,7 +66,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ui.label.mousePressEvennt=self.getPixel
         self.ui.label.mouseDoubleClickEvent=self.getPixel
         self.ui.label.mouseHold=self.getPixel
-        self.click=1
+        self.click=0
         self.ui.horizontalSlider.valueChanged.connect(self.valuechangeb)
         self.ui.horizontalSlider_2.valueChanged.connect(self.valuechangec)
          
@@ -88,49 +91,136 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             out=enhance_object.enhance(factor)
             im=ImageQt(out)
             self.ui.label_4.setPixmap(QPixmap.fromImage(im))
-    
-    
+    def Ernst_Angle(self):
+        time_spin=int(2000)
+        flip_angle=self.ui.spinBox_4.value()       
+        arr1 = []         
+        for t in range(time_spin):
+            E = np.exp(-t/self.T1[self.i,self.j])
+            theta=np.radians(flip_angle) 
+            Mz = (1-E)/(1-E*np.cos(theta))
+            arr1.append(Mz)
+         
+        plotWindow = self.ui.graphicsView_3
+        plotWindow.plot(arr1, pen='m')
+    def seq (self):
+     sequ = self.ui.comboBox_5.currentText() 
+     if (sequ=="GRE"): 
+        root = Tk()
+        canvas = Canvas(root,width=500,height=520)
+        canvas.pack()
+        
+        RF = canvas.create_line(0,100,500,100)
+        Gz = canvas.create_line(0,200,500,200)
+        Gy = canvas.create_line(0,300,500,300)
+        Gx = canvas.create_line(0,400,500,400)
+        RO = canvas.create_line(0,500,500,500)
+        
+        xy1 = []
+        for x in range (-50,50):
+            # x coordinates
+            xy1.append(50+ x * 1)    # y coordinates
+            xy1.append((-np.sinc(x * 0.1) * 50) + 100)
+        sinc = canvas.create_line(xy1, fill='blue')
+            
+        xy2 = []
+        for y in range (-50,50):
+    # x coordinates
+            xy2.append(350+ y * 1)
+    # y coordinates
+            xy2.append((-np.sinc(y * 0.1) * 50) + 100)
+        sinc2 = canvas.create_line(xy2, fill='blue')
+
+#rect = canvas.create_rectangle(bdayt el x, bdayt el y,nhayt el x,nhayt el y)
+        rect = canvas.create_rectangle(5,200,100,150)
+        rect1 = canvas.create_rectangle(100,300,200,250)
+        rect2 = canvas.create_rectangle(200,400,300,350)
+        rect3 = canvas.create_rectangle(200,500,300,450)
+        
+        str1 = "RF"
+        txt1 = canvas.create_text(470, 98, anchor=SW, text=str1)
+        str2 = "Gz"
+        txt2 = canvas.create_text(470, 200, anchor=SW, text=str2)
+        str3 = "Gy"
+        txt3 = canvas.create_text(470, 300, anchor=SW, text=str3)
+        str4 = "Gx"
+        txt4 = canvas.create_text(470, 400, anchor=SW, text=str4)
+        str5 = "RO"
+        txt5 = canvas.create_text(470, 500, anchor=SW, text=str5)
+        root.mainloop()
+        
+     elif(sequ=="SSFP"):
+                  
+        root = Tk()
+        canvas = Canvas(root,width=500,height=520)
+        canvas.pack()
+        
+        RF = canvas.create_line(0,100,500,100)
+        Gz = canvas.create_line(0,200,500,200)
+        Gy = canvas.create_line(0,300,500,300)
+        Gx = canvas.create_line(0,400,500,400)
+        RO = canvas.create_line(0,500,500,500)
+        
+        xy1 = []
+        for x in range (-50,50):
+            # x coordinates
+            xy1.append(50+ x * 1)
+            # y coordinates
+            xy1.append((-np.sinc(x * 0.1) * 25) + 100)
+        sinc = canvas.create_line(xy1, fill='blue')
+        
+        xy2 = []
+        for y in range (-50,50):
+            # x coordinates
+            xy2.append(450+ y * 1)
+            # y coordinates
+            xy2.append((-np.sinc(y * 0.1) * 50) + 100)
+        sinc2 = canvas.create_line(xy2, fill='blue')
+        
+        #rect = canvas.create_rectangle(bdayt el x, bdayt el y,nhayt el x,nhayt el y)
+        rect = canvas.create_rectangle(5,200,100,160)
+        rect1 = canvas.create_rectangle(100,330,200,270)
+        rect2 = canvas.create_rectangle(200,400,300,360)
+        rect3 = canvas.create_rectangle(200,500,300,460)
+        
+        rect4 = canvas.create_rectangle(300,240,400,200)
+        rect5 = canvas.create_rectangle(300,330,400,270)
+        rect6 = canvas.create_rectangle(300,440,400,400)
+        
+        
+        str1 = "RF"
+        txt1 = canvas.create_text(470, 98, anchor=SW, text=str1)
+        str2 = "Gz"
+        txt2 = canvas.create_text(470, 200, anchor=SW, text=str2)
+        str3 = "Gy"
+        txt3 = canvas.create_text(470, 300, anchor=SW, text=str3)
+        str4 = "Gx"
+        txt4 = canvas.create_text(470, 400, anchor=SW, text=str4)
+        str5 = "RO"
+        txt5 = canvas.create_text(470, 500, anchor=SW, text=str5)
+        str1 = "+ve"
+        txt1 = canvas.create_text(40, 190, anchor=SW, text=str1)
+        str1 = "-ve"
+        txt1 = canvas.create_text(340, 230, anchor=SW, text=str1)
+        str1 = "-ve"
+        txt1 = canvas.create_text(340, 430, anchor=SW, text=str1)
+        str1 = "+ve"
+        txt1 = canvas.create_text(240, 380, anchor=SW, text=str1)
+        str1 = "<<SSFP Sequence>>"
+        txt1 = canvas.create_text(200, 50, anchor=SW, text=str1)
+        
+        arrow1 = canvas.create_line(150,280,150,320)
+        arrow1 = canvas.create_line(150,280,160,290)
+        arrow1 = canvas.create_line(150,280,140,290)
+        
+        arrow2 = canvas.create_line(350,280,350,320)
+        arrow2 = canvas.create_line(360,310,350,320)
+        arrow2 = canvas.create_line(340,310,350,320)
+        
+        root.mainloop()
     def  getPixel   (self,event):
-#        plotWindow = self.ui.graphicsView
-#        plotWindow2 = self.ui.graphicsView_2
-#          
-#        if(self.click<=5):
-#            self.x=math.floor((event.pos().x()*self.N)/self.ui.label.frameGeometry().width())
-#            self.y=math.floor((event.pos().y()*self.N)/self.ui.label.frameGeometry().height())
-#            self.frame()
-#            t1_value = self.T1[self.x,self.y]
-#            t2_value = self.T2[self.x,self.y]
-##        
-#             
-#            arr1=[]
-#            arr2=[]
-#            for t  in range (100):
-#                Mz=(1-np.exp(-t/t1_value))
-#                Mxy=np.exp(-t/t2_value)
-#                arr1.append(Mz)
-#                arr2.append(Mxy)
-#            self.click=self.click+1    
-#            TE=self.ui.spinBox.value()
-#            TR=self.ui.spinBox_3.value()  
-#            if(self.click==1):
-#                plotWindow.plot([TR,TR],(0,1), pen='w')
-#                plotWindow2.plot([TE,TE],(0,1), pen='w')
-#                plotWindow.plot(arr1, pen='r')
-#                plotWindow2.plot(arr2, pen='r')
-#            elif(self.click==2):
-#                plotWindow.plot(arr1, pen='g')
-#                plotWindow2.plot(arr2, pen='g')
-#            elif (self.click==3):
-#                plotWindow.plot(arr1, pen='b')
-#                plotWindow2.plot(arr2, pen='b')
-#            elif(self.click==4):   
-#                plotWindow.plot(arr1, pen='y')
-#                plotWindow2.plot(arr2, pen='y')
-#            elif(self.click==5):
-#                plotWindow.plot(arr1, pen='m')
-#                plotWindow2.plot(arr2, pen='m')
-#            else :
-#                print ("end")
+      self.click=self.click+1 
+      if(self.click<6):
         self.x=math.floor((event.pos().x()*self.N)/self.ui.label.frameGeometry().width())
         self.y=math.floor((event.pos().y()*self.N)/self.ui.label.frameGeometry().height())
         self.frame()
@@ -145,16 +235,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         t2_plot=self.t2_value
         print('t1',t1_plot)
         print('t2',t2_plot)
-       
-#        spin=(self.ui.lineEdit_4.text())
-#        self.ST=int(spin)
+ 
         TE=self.ui.spinBox.value()
         TR=self.ui.spinBox_3.value()
-        
-#        tr=(self.ui.lineEdit_2.text())
-#        self.TR=int(tr)
-#        te=(self.ui.lineEdit_3.text())
-#        self.TE=int(te)
+ 
         for t in range (100):
             Mz=(1-np.exp(-t/t1_plot))
             Mxy=np.exp(-t/t2_plot)
@@ -163,11 +247,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             arr1.append(Mz)
             arr2.append(Mxy)
         
-            QtGui.QApplication.processEvents() 
+            QtGui.QApplication.processEvents()
+           
             
         if(self.click==1):
-#           plotWindow.plot([TR,TR],(0,1), pen='w')
-#           plotWindow2.plot([TE,TE],(0,1), pen='w')
+ 
            plotWindow.plot(arr1, pen='r')
            plotWindow2.plot(arr2, pen='r')
         elif(self.click==2):
@@ -189,6 +273,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         
     def frame(self):
+         
+         
         #QApplication.processEvents()
         painter= QtGui.QPainter(self.pix)
         painter.begin(self)
@@ -211,10 +297,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         result=self.pix.scaled(int(self.pix.height()),int(self.pix.width()))
         self.ui.label.setPixmap(result)
         #QApplication.processEvents()
-        
     def button_clicked(self): 
-         self.text = self.templatetype.currentText() 
-         if (self.text =="phantom1"): 
+         self.text = self.ui.comboBox.currentText()  
+         if (self.text =="Phantom 1"): 
              self.N=self.ui.spinBox_2.value()
              fileName, _filter = QFileDialog.getOpenFileName(self, "Title", "Default File", "Filter -- All Files (*);;Python Files (*.py)")
              pixmap = QPixmap(fileName)
@@ -257,7 +342,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
               
 
              
-         else:#        self.N=int(input("size"))
+         elif (self.text =="Phantom 2"):#        self.N=int(input("size"))
              self.N=self.ui.spinBox_2.value()
              def phantom (n = self.N, p_type = 'Modified Shepp-Logan', ellipses = None):
 	                   
@@ -357,10 +442,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
              self.T2=np.array(x)
              for self.i in range (0,self.N):
                  for self.j in range (0,self.N):
-                     self.T1[self.i][self.j]=(self.T1[self.i][self.j]+255)/2
-                     self.T2[self.i][self.j]=(self.T2[self.i][self.j]+80)/2
+                     self.T1[self.i,self.j]=(self.T1[self.i,self.j]+255)/2
+                     self.T2[self.i,self.j]=(self.T2[self.i,self.j]+80)/2
                   
-
+             print (self.T1)
              t1_new=np.asarray(self.T1,dtype=np.uint8)
              t1_img=Image.fromarray(t1_new)
              t1_img.save('T1.png')
@@ -382,28 +467,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
              pix2=QPixmap.fromImage( result2)
              self.ui.label_5.setPixmap( pix2 )
              self.ui.label_5.show()
-        
-        
-    def KSPACE (self):
-            FA=self.ui.spinBox_4.value()
-            TE=self.ui.spinBox.value()
-            TR=self.ui.spinBox_3.value()
-             
-            K_space=np.zeros((self.N,self.N) ,dtype=complex)
-            #res1=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
-            #res2=np.zeros((self.N,self.N,3))#[[[0 for k in range (3)] for j in range (3)] for i in range (3)]
-            intial_mat= np.zeros((self.N,self.N,3))#np.array([[[0 for k in range (3)] for j in range (self.N)] for i in range (self.N)]) #np.zeros((self.N,self.N,3))
-            recovery=np.array([[0],[0],[1-math.exp(-1000/self.T1[self.i][self.j])]])
-    
-            for self.i in range (0,self.N):
+    def intial (self):
+         intial_mat= np.zeros((self.N,self.N,3))
+         for self.i in range (0,self.N):
                 for self.j in range (0,self.N):
-                    intial_mat[self.i,self.j,2]=1
-                    #print(intial_mat)
-            FA1=math.radians(FA) #Convert angle FA from degrees to radians   
-            R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
-            
-            for q in range (16):
-                for w in range (16):
+                    intial_mat[self.i,self.j,2]=1  
+         return  intial_mat 
+    def startup(self,intial_mat):
+        FA=self.ui.spinBox_4.value()
+        TE=self.ui.spinBox.value()
+        TR=self.ui.spinBox_3.value()
+         
+        FA1=math.radians(FA) 
+        R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) 
+        for q in range (40):
+            for w in range (40):
                      Decay=np.exp(-TE/self.T2[q,w])
                      intial_mat[q,w,:]=np.dot(R, intial_mat[q,w,:])  #multiply rotation mattrix with Mo
                                 #qq=np.reshape(res1, (3,int(self.N)*int(self.N)))
@@ -411,62 +489,437 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                      intial_mat[q,w,:]=np.dot( Decay,intial_mat[q,w,:])
                      intial_mat[q,w,0]=0
                      intial_mat[q,w,1]=0
-                     intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w]))                   
+                     intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w]))           
+        return  intial_mat    
+    def GRE (self,intial_mat):
+        FA=self.ui.spinBox_4.value()
+        TE=self.ui.spinBox.value()
+        TR=self.ui.spinBox_3.value()
+        
+        K_space=np.zeros((self.N,self.N) ,dtype=complex)
+        FA1=math.radians(FA) #Convert angle FA from degrees to radians   
+        R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+             
+         
+        for K_space_row in range (K_space.shape[0]):
+                    for self.i in range (self.N):
+                        for self.j in range (self.N):
+                            Decay=np.exp(-TE/self.T2[self.i,self.j]) 
+                            intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])  #multiply rotation mattrix with Mo
+                                
+                            intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                                
+                    for K_space_col in range (K_space.shape[1]):
+                        Gxstep=((2*np.pi)/self.N)*K_space_row
+                        Gystep=((2*np.pi)/self.N)*K_space_col
+                        
+                        for t in range (self.N):
+                            for y in range (self.N):
+                                total_theta = (Gxstep*t) +(Gystep*y)
+                                #print(total_theta)
+                                x_y=math.sqrt( intial_mat[t,y,0]**2 + intial_mat[t,y,1]**2)
+                                    #print(x_y)
+                                K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                            #print("K_space",K_space)        
+             
+                    for ph_rowtr in range(self.N): 
+                        for ph_coltr in range(self.N):
+                            intial_mat[ph_rowtr,ph_coltr,0]=0
+                            intial_mat[ph_rowtr,ph_coltr,1]=0
+                            intial_mat[ph_rowtr,ph_coltr,2]=((intial_mat[ph_rowtr,ph_coltr,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[ph_rowtr,ph_coltr]))                   
                               
-                    
-            print (intial_mat)
-            
-            
-            
-            for K_space_row in range (K_space.shape[0]):
+             
+                    f =np.fft.ifft2(K_space).real
+                    maxp= np.max(f)
+                    minp = np.min(f)
+                    f=(255/(maxp-minp)*(f-minp))
+                    tt=np.abs(f)
+                    rr=gray2qimage(tt)
+                    img1=QPixmap( rr)
+                    img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+                
+                    self.ui.label_7.setPixmap( img1 )
+                    self.ui.label_7.show()
+    def SSFP(self,intial_mat):
+        FA=self.ui.spinBox_4.value()
+        FLIP =FA
+        TE=self.ui.spinBox.value()
+        TR=self.ui.spinBox_3.value()
+        K_space=np.zeros((self.N,self.N) ,dtype=complex)
+        FA1=math.radians(FA) #Convert angle FA from degrees to radians   
+        R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+        for K_space_row in range (K_space.shape[0]):
                 for self.i in range (self.N):
                     for self.j in range (self.N):
                         Decay=np.exp(-TE/self.T2[self.i,self.j])#np.array([[np.exp(-TE/self.T2[self.i][self.j]) ,0 ,0] , [0 ,np.exp(-TE/self.T2[self.i][self.j]) , 0 ] , [0 , 0  , np.exp(-TE/self.T2[self.i][self.j])]])
-                        ##print(Decay)       
-                        intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])  #multiply rotation mattrix with Mo
-                                #qq=np.reshape(res1, (3,int(self.N)*int(self.N)))
+                        ##print(Decay) 
+                        
+                        if FLIP== FA: 
+                            FLIP=FA/2
+                            
+                            FA1=math.radians(FLIP)   
+                           
+                            R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
                                 
-                        intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
-                                #print(intial_mat)
-                                #print(res2)
-                                #intial_mat[self.i][self.j]=np.reshape(qq, (self.N,self.N,3))
-                                #print(res2)
-##                
+                            intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                               
+                            intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                        elif FLIP==FA/2:
+                              FA1=math.radians(FA) 
+                              FLIP=FA/4
+                              R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                            
+                              intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                              
+                              intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                        elif FLIP==FA/4:  
+                              FA1= math.radians(-1*FA) 
+                              FLIP=FA/2
+                              R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                            
+                              intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                           
+                              intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
                 for K_space_col in range (K_space.shape[1]):
-                    Gxstep=((2*np.pi)/self.N)*K_space_row
-                    Gystep=((2*np.pi)/self.N)*K_space_col
-                    # print(Gxstep)
-                    #print(Gystep)
-                    for t in range (self.N):
-                        for y in range (self.N):
-                            total_theta = (Gxstep*t) +(Gystep*y)
-                            #print(total_theta)
-                            x_y=math.sqrt( intial_mat[t,y,0]**2 + intial_mat[t,y,1]**2)
-                                #print(x_y)
-                            K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                        Gxstep=((2*np.pi)/self.N)*K_space_row
+                        Gystep=((2*np.pi)/self.N)*K_space_col
+                        
+                        for t in range (self.N):
+                            for y in range (self.N):
+                                total_theta = (Gxstep*t) +(Gystep*y)
+                                #print(total_theta)
+                                x_y=math.sqrt( intial_mat[t,y,0]**2 + intial_mat[t,y,1]**2)
+                                    #print(x_y)
+                                K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
                             #print("K_space",K_space)        
              
+                for ph_rowtr in range(self.N): 
+                        for ph_coltr in range(self.N):
+                            intial_mat[ph_rowtr,ph_coltr,0]=0
+                            intial_mat[ph_rowtr,ph_coltr,1]=0
+                            intial_mat[ph_rowtr,ph_coltr,2]=((intial_mat[ph_rowtr,ph_coltr,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[ph_rowtr,ph_coltr]))                   
+                              
+             
+                f =np.fft.ifft2(K_space).real
+                maxp= np.max(f)
+                minp = np.min(f)
+                f=(255/(maxp-minp)*(f-minp))
+                tt=np.abs(f)
+                rr=gray2qimage(tt)
+                img1=QPixmap( rr)
+                img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+                
+                self.ui.label_7.setPixmap( img1 )
+                self.ui.label_7.show()        
+        
+    def SE (self,intial_mat):
+        
+        TE=self.ui.spinBox.value()
+        TR=self.ui.spinBox_3.value()
+        
+        K_space=np.zeros((self.N,self.N) ,dtype=complex)
+        for K_space_row in range (K_space.shape[0]):
+                    
+                  for self.i in range (self.N):
+                    for self.j in range (self.N):
+                        
+                            Decay=np.exp(-TE/2*self.T2[self.i,self.j])  
+                            FA1=math.radians(90)   
+                           
+                            R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                                
+                            intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                               
+                            intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                  for ph_rowtr in range(self.N): 
+                        for ph_coltr in range(self.N):
+                            intial_mat[ph_rowtr,ph_coltr,0]=0
+                            intial_mat[ph_rowtr,ph_coltr,1]=0
+                            intial_mat[ph_rowtr,ph_coltr,2]=((intial_mat[ph_rowtr,ph_coltr,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[ph_rowtr,ph_coltr]))                            
+                  for self.i in range (self.N):
+                    for self.j in range (self.N):
+                        
+                            Decay=np.exp(-TE/self.T2[self.i,self.j])#np.array([[np.exp(-TE/self.T2[self.i][self.j]) ,0 ,0] , [0 ,np.exp(-TE/self.T2[self.i][self.j]) , 0 ] , [0 , 0  , np.exp(-TE/self.T2[self.i][self.j])]])
+                        ##print(Decay) 
+                         
+                            FA1=math.radians(180)
+                           
+                            R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                                
+                            intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                               
+                            intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                        
+                  for K_space_col in range (K_space.shape[1]):
+                        Gxstep=((2*np.pi)/self.N)*K_space_row
+                        Gystep=((2*np.pi)/self.N)*K_space_col
+                        
+                        for t in range (self.N):
+                            for y in range (self.N):
+                                total_theta = (Gxstep*t) +(Gystep*y)
+                                #print(total_theta)
+                                x_y=math.sqrt( intial_mat[t,y,0]**2 + intial_mat[t,y,1]**2)
+                                    #print(x_y)
+                                K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                            #print("K_space",K_space)        
+             
+                  for ph_rowtr in range(self.N): 
+                        for ph_coltr in range(self.N):
+                            intial_mat[ph_rowtr,ph_coltr,0]=0
+                            intial_mat[ph_rowtr,ph_coltr,1]=0
+                            intial_mat[ph_rowtr,ph_coltr,2]=((intial_mat[ph_rowtr,ph_coltr,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[ph_rowtr,ph_coltr]))                   
+                              
+             
+                  f =np.fft.ifft2(K_space).real
+                  maxp= np.max(f)
+                  minp = np.min(f)
+                  f=(255/(maxp-minp)*(f-minp))
+                  tt=np.abs(f)
+                  rr=gray2qimage(tt)
+                  img1=QPixmap( rr)
+                  img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+                
+                  self.ui.label_7.setPixmap( img1 )
+                  self.ui.label_7.show()        
+                
+    def T2_PREP (self):
+        intial_mat=self.intial()
+        TR=self.ui.spinBox_3.value()
+        for q in range (self.N):
+                for w in range (self.N):
+          
+                    FA1=math.radians(90)
+                    R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]])
+                    intial_mat[q,w,:]=np.dot(R, intial_mat[q,w,:]) 
+        for q in range (self.N):
+                for w in range (self.N):
+          
+                    intial_mat[q,w,0]=0
+                    intial_mat[q,w,1]=0
+                    intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w]))
+        for q in range (self.N):
+                for w in range (self.N):
+                     
+                    FA1=math.radians(-90)
+                    R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) 
+                    intial_mat[q,w,:]=np.dot(R, intial_mat[q,w,:])  
+        return intial_mat    
+            
+    def T1_PREP (self):
+        intial_mat=self.intial()
+       
+        T_Null=np.log(2)*127
+        for q in range (self.N):
+                for w in range (self.N):
+                    FA1=math.radians(180)
+                    R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]])
+                    intial_mat[q,w,:]=np.dot(R, intial_mat[q,w,:])  
+        for q in range (self.N):
+                for w in range (self.N):
+                    intial_mat[q,w,0]=0
+                    intial_mat[q,w,1]=0
+                    intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-T_Null/self.T1[self.i,self.j]))+(1-np.exp(-T_Null/self.T1[q,w]))
+                                 
+        return intial_mat
+    def Tagging (self):
+        intial_mat=self.intial()
+        for t in range (self.N):
+            for y in range (self.N):
+                theta = (t*np.pi)/self.N
+                theta1=math.radians(theta)
+                sin = np.sin(theta1)
+                intial_mat[t,y,:]=intial_mat[t,y,:]*sin
+        return intial_mat        
+                       
+    def Acquisition (self):
+        ACQ = self.ui.comboBox_2.currentText()  
+        pre = self.ui.comboBox_3.currentText()  
+        if (pre =="T1_PREP"):
+            
+            intial_mat=self.T1_PREP( )
+            intial_mat=self.startup(intial_mat)
+            if (ACQ =="GRE"): 
+              
+                self.GRE(intial_mat)
+            elif (ACQ =="SSFP"):
+                self.SSFP(intial_mat)
+             
+            elif (ACQ =="SE"):
+                self.SE(intial_mat)
+        elif (pre =="T2_PREP"):
+            intial_mat=self.T2_PREP( )
+            intial_mat=self.startup(intial_mat)
+            if (ACQ =="GRE"): 
+              
+                self.GRE(intial_mat)
+            elif (ACQ =="SSFP"):
+                self.SSFP(intial_mat)
+             
+            elif (ACQ =="SE"):
+                self.SE(intial_mat)
+        elif (pre =="Tagging"):
+            intial_mat=self.Tagging( )
+            intial_mat=self.startup(intial_mat)
+            if (ACQ =="GRE"): 
+              
+                self.GRE(intial_mat)
+            elif (ACQ =="SSFP"):
+                self.SSFP(intial_mat)
+             
+            elif (ACQ =="SE"):
+                self.SE(intial_mat)
+    
+                        
+    def Artifacts (self):
+            FA=self.ui.spinBox_4.value()
+            FLIP =FA
+            TE=self.ui.spinBox.value()
+            TR=self.ui.spinBox_3.value()
+             
+            K_space=np.zeros((self.N,self.N) ,dtype=complex)
+            intial_mat= np.zeros((self.N,self.N,3))#np.array([[[0 for k in range (3)] for j in range (self.N)] for i in range (self.N)]) #np.zeros((self.N,self.N,3))
+            recovery=np.array([[0],[0],[1-math.exp(-1000/self.T1[self.i,self.j])]])
+    
+            for self.i in range (0,self.N):
+                for self.j in range (0,self.N):
+                    intial_mat[self.i,self.j,2]=1
+                    
+            FA1=math.radians(FA)  
+            R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+            
+            for q in range (5):
+                for w in range (5):
+                     Decay=np.exp(-TE/self.T2[q,w])
+                     intial_mat[q,w,:]=np.dot(R, intial_mat[q,w,:])  
+                     intial_mat[q,w,:]=np.dot( Decay,intial_mat[q,w,:])
+                     intial_mat[q,w,0]=0
+                     intial_mat[q,w,1]=0
+                     intial_mat[q,w,2]=((intial_mat[q,w,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[q,w]))                   
+              
+            Art= self.ui.comboBox_4.currentText()  
+            if (Art=="Motion"):
+              for K_space_row in range (K_space.shape[0]):
+                for self.i in range (self.N):
+                    for self.j in range (self.N):
+                        Decay=np.exp(-TE/self.T2[self.i,self.j]) 
+                        
+                        if FLIP== FA: 
+                            
+                            FA1=math.radians(FLIP) 
+                            FLIP=FA-12
+                            
+                            R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                                
+                            intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                              
+                            intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                        elif FLIP==FA-12:
+                              FA1=math.radians(FLIP) 
+                              FLIP=FA-24
+                              R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                            
+                              intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                          
+                              intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                        elif FLIP==FA-24:  
+                              FA1= math.radians(FLIP) 
+                              FLIP=FA
+                              R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                            
+                              intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                        
+                              intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                      
+                for K_space_col in range (K_space.shape[1]):
+                     
+                     Gxstep=((2*np.pi)/self.N)*K_space_row
+                    
+                     Gystep=((2*np.pi)/self.N)*K_space_col
+                     for t in range (self.N):
+                        for y in range (self.N):
+                                    
+                                    total_theta = (Gxstep*t) +(Gystep*y)
+                                    
+                                    #print(total_theta)
+                                    x_y= (math.sqrt( (intial_mat[t,y,0])**2 + intial_mat[t,y,1]**2))
+                                        #print(x_y)
+                                    K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                    
+                
                 for ph_rowtr in range(self.N): 
                     for ph_coltr in range(self.N):
                         intial_mat[ph_rowtr,ph_coltr,0]=0
                         intial_mat[ph_rowtr,ph_coltr,1]=0
                         intial_mat[ph_rowtr,ph_coltr,2]=((intial_mat[ph_rowtr,ph_coltr,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[ph_rowtr,ph_coltr]))                   
-                              
+                             
              
-            f =np.fft.ifft2(K_space).real
-            maxp= np.max(f)
-            minp = np.min(f)
-            f=(255/(maxp-minp)*(f-minp))
-            tt=np.abs(f)
-            rr=gray2qimage(tt)
-            img1=QPixmap( rr)
-            img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+              f =np.fft.ifft2(K_space).real
+              maxp= np.max(f)
+              minp = np.min(f)
+              f=(255/(maxp-minp)*(f-minp))
+              tt=np.abs(f)
+              rr=gray2qimage(tt)
+              img1=QPixmap( rr)
+              img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
              
-            self.ui.label_7.setPixmap( img1 )
-            self.ui.label_7.show()
+              self.ui.label_7.setPixmap( img1 )
+              self.ui.label_7.show()
          
  
-          
+            elif (Art=="Aliasing"):
+              K_space=np.zeros((self.N,self.N-5) ,dtype=complex)
+              for K_space_row in range (K_space.shape[0]):
+                 for self.i in range (self.N):
+                    for self.j in range (self.N):
+                         
+                        Decay=np.exp(-TE/self.T2[self.i,self.j]) 
+                    
+                        R=np.array([[np.cos(FA1),0,np.sin(FA1)],[0,1,0],[-np.sin(FA1),0,np.cos(FA1)]]) # rotation matrrix 
+                        
+                        intial_mat[self.i,self.j,:]=np.dot(R, intial_mat[self.i,self.j,:])
+                        
+                        intial_mat[self.i,self.j,:]=np.dot( Decay,intial_mat[self.i,self.j,:])
+                    
+                 for K_space_col in range (K_space.shape[1]):
+                      
+                     Gxstep=((2*np.pi)/self.N)*K_space_row
+                    
+                     Gystep=((-3.5*np.pi)/self.N)*K_space_col
+                     for t in range (self.N):
+                        for y in range (self.N):
+                                    
+                                    total_theta = (Gxstep*t) +(Gystep*y)
+                                    
+                                    x_y= (math.sqrt( (intial_mat[t,y,0])**2 + intial_mat[t,y,1]**2))
+                                        
+                                    K_space[K_space_row, K_space_col]= K_space[K_space_row, K_space_col]+( x_y * np.exp(-1j*total_theta))
+                     
+                 for ph_rowtr in range(self.N): 
+                    for ph_coltr in range(self.N):
+                        intial_mat[ph_rowtr,ph_coltr,0]=0
+                        intial_mat[ph_rowtr,ph_coltr,1]=0
+                        intial_mat[ph_rowtr,ph_coltr,2]=((intial_mat[ph_rowtr,ph_coltr,2])*np.exp(-TR/self.T1[self.i,self.j]))+(1-np.exp(-TR/self.T1[ph_rowtr,ph_coltr]))                   
+                             
+             
+              f =np.fft.ifft2(K_space).real
+              maxp= np.max(f)
+              minp = np.min(f)
+              f=(255/(maxp-minp)*(f-minp))
+              tt=np.abs(f)
+              rr=gray2qimage(tt)
+              img1=QPixmap( rr)
+              img1=img1.scaled(int(img1.height()),int(img1.width()),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation)
+              
+              self.ui.label_7.setPixmap( img1 )
+              self.ui.label_7.show()
+         
+                
+                   
+        
+        
+        
+        
+        
 def main():
     app = QtWidgets.QApplication(sys.argv)
     application = ApplicationWindow()
@@ -476,8 +929,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-```fffffff````
-``hggu
-
-hhhh
 
